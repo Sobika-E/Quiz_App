@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Create & Take Quiz with Timer & Animations</title>
+  <style>
+    body {
+      background-color: #000;
+      color: white;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .quiz-container, .quiz-play {
+      background-color: #111;
+      padding: 30px;
+      border-radius: 15px;
+      width: 400px;
+      box-shadow: 0 0 10px rgba(255, 192, 203, 0.2);
+      margin-bottom: 20px;
+    }
+
+    h2, h3 {
+      text-align: center;
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      margin-bottom: 5px;
+    }
+
+    input[type="text"], select {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      background-color: #222;
+      color: white;
+    }
+
+    .btn {
+      background-color: hotpink;
+      color: white;
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      margin-top: 20px;
+      width: 100%;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .btn:hover {
+      background-color: deeppink;
+    }
+
+    .question-item {
+      background-color: #111;
+      border-left: 4px solid hotpink;
+      padding: 10px;
+      margin-bottom: 15px;
+      border-radius: 10px;
+    }
+
+    .question-item h4 {
+      color: #ff66a3;
+    }
+
+    .correct {
+      color: lightgreen;
+    }
+
+    .option-btn {
+      display: block;
+      margin: 8px 0;
+      padding: 10px;
+      background-color: #222;
+      border: 2px solid hotpink;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .option-btn:hover {
+      background-color: deeppink;
+    }
+
+    #result {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+
+    .sparkle {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 1000;
+    }
+
+    .hidden {
+      display: none;
+    }
+    
+    /* Add style for animation effect */
+    @keyframes sparkle {
+      0% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(3); opacity: 0; }
+    }
+
+    .sparkle .star {
+      position: absolute;
+      border-radius: 50%;
+      background-color: pink;
+      width: 20px;
+      height: 20px;
+      animation: sparkle 1.5s ease-out infinite;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="quiz-container" id="creatorSection">
+    <h2>Create a Quiz</h2>
+    <form id="quizForm">
+      <label>Question:</label>
+      <input type="text" id="question" required>
+
+      <label>Option 1:</label>
+      <input type="text" id="option1" required>
+
+      <label>Option 2:</label>
+      <input type="text" id="option2" required>
+
+      <label>Option 3:</label>
+      <input type="text" id="option3" required>
+
+      <label>Option 4:</label>
+      <input type="text" id="option4" required>
+
+      <label>Correct Answer:</label>
+      <select id="correctAnswer" required>
+        <option value="" disabled selected>Select the correct option</option>
+        <option value="option1">Option 1</option>
+        <option value="option2">Option 2</option>
+        <option value="option3">Option 3</option>
+        <option value="option4">Option 4</option>
+      </select>
+
+      <button type="submit" class="btn">Add Question</button>
+    </form>
+    <button class="btn" id="startQuizBtn">Start Quiz</button>
+  </div>
+
+  <div id="questionList" class="quiz-container">
+    <h3>Added Questions:</h3>
+  </div>
+
+  <div class="quiz-play" id="quizPlaySection" style="display: none;">
+    <h2>Quiz Time!</h2>
+    <div id="quizBox"></div>
+    <div id="timer">Time Left: <span id="timeRemaining">15</span> sec</div>
+    <div id="result"></div>
+  </div>
+
+  <div id="sparkleEffect" class="sparkle hidden"></div>
+
+  <script>
+    const quizForm = document.getElementById("quizForm");
+    const questionList = document.getElementById("questionList");
+    const startQuizBtn = document.getElementById("startQuizBtn");
+    const quizPlaySection = document.getElementById("quizPlaySection");
+    const quizBox = document.getElementById("quizBox");
+    const resultBox = document.getElementById("result");
+    const timeRemainingElem = document.getElementById("timeRemaining");
+    const sparkleEffect = document.getElementById("sparkleEffect");
+
+    const questions = [];
+    let currentIndex = 0;
+    let score = 0;
+    let timer;
+
+    quizForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const q = document.getElementById("question").value;
+      const options = {
+        option1: document.getElementById("option1").value,
+        option2: document.getElementById("option2").value,
+        option3: document.getElementById("option3").value,
+        option4: document.getElementById("option4").value,
+      };
+      const correct = document.getElementById("correctAnswer").value;
+
+      questions.push({
+        question: q,
+        options,
+        correct
+      });
+
+      const questionItem = document.createElement("div");
+      questionItem.className = "question-item";
+      questionItem.innerHTML = `
+        <h4>${q}</h4>
+        <ul>
+          ${Object.entries(options).map(([key, val]) => `
+            <li${key === correct ? ' class="correct"' : ''}>${val}</li>
+          `).join('')}
+        </ul>
+      `;
+      questionList.appendChild(questionItem);
+      quizForm.reset();
+    });
+
+    startQuizBtn.addEventListener("click", () => {
+      if (questions.length === 0) {
+        alert("Please add at least one question first!");
+        return;
+      }
+
+      document.getElementById("creatorSection").style.display = "none";
+      questionList.style.display = "none";
+      quizPlaySection.style.display = "block";
+      currentIndex = 0;
+      score = 0;
+      resultBox.innerHTML = "";
+      startTimer();
+      showQuestion();
+    });
+
+    function showQuestion() {
+      const q = questions[currentIndex];
+      quizBox.innerHTML = `
+        <h3>${q.question}</h3>
+        ${Object.entries(q.options).map(([key, val]) => `
+          <button class="option-btn" onclick="checkAnswer('${key}')">${val}</button>
+        `).join('')}
+      `;
+    }
+
+    function startTimer() {
+      let timeLeft = 15;
+      timeRemainingElem.textContent = timeLeft;
+      timer = setInterval(() => {
+        timeLeft--;
+        timeRemainingElem.textContent = timeLeft;
+        if (timeLeft === 0) {
+          clearInterval(timer);
+          checkAnswer(null); // Auto-submit after time's up
+        }
+      }, 1000);
+    }
+
+    function showSparkles() {
+      sparkleEffect.classList.remove("hidden");
+      setTimeout(() => sparkleEffect.classList.add("hidden"), 1500);
+      for (let i = 0; i < 5; i++) {
+        const star = document.createElement("div");
+        star.className = "star";
+        star.style.top = `${Math.random() * 50}px`;
+        star.style.left = `${Math.random() * 50}px`;
+        sparkleEffect.appendChild(star);
+        setTimeout(() => star.remove(), 1500);
+      }
+    }
+
+    window.checkAnswer = function (selected) {
+      const correct = questions[currentIndex].correct;
+      clearInterval(timer); // Stop timer
+
+      if (selected === correct) {
+        score++;
+        resultBox.innerHTML = `<p class="correct">Correct! ✅</p>`;
+        showSparkles(); // Show sparkle animation
+      } else {
+        const correctText = questions[currentIndex].options[correct];
+        resultBox.innerHTML = `<p style="color: red;">Wrong! ❌ Better luck next time! Try harder!<br>Correct answer: ${correctText}</p>`;
+      }
+
+      currentIndex++;
+      setTimeout(() => {
+        resultBox.innerHTML = "";
+        if (currentIndex < questions.length) {
+          startTimer(); // Restart timer for next question
+          showQuestion();
+        } else {
+          showSummary();
+        }
+      }, 2000);
+    };
+
+    function showSummary() {
+      quizBox.innerHTML = `<h3>Quiz Finished!</h3><p>Your score: ${score}/${questions.length}</p>`;
+      let mistakes = questions.filter((q, i) => q.correct !== Object.keys(q.options)[i]);
+      if (mistakes.length > 0) {
+        let mistakesText = "Mistakes:\n";
+        mistakes.forEach((mistake, index) => {
+          mistakesText += `${index + 1}. ${mistake.question} - Correct answer: ${mistake.options[mistake.correct]}\n`;
+        });
+        quizBox.innerHTML += `<pre>${mistakesText}</pre>`;
+      }
+    }
+  </script>
+</body>
+</html>

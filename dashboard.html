@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>User Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .dashboard-container {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 40px;
+      border-radius: 20px;
+      margin-top: 60px;
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+      text-align: center;
+      width: 90%;
+      max-width: 600px;
+    }
+
+    .dashboard-container h1 {
+      font-size: 32px;
+      margin-bottom: 20px;
+    }
+
+    .stats {
+      margin: 20px 0;
+      font-size: 18px;
+      line-height: 1.8;
+    }
+
+    .stats span {
+      font-weight: bold;
+      color: #ff758c;
+    }
+
+    .dashboard-img {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      width: 60px;               /* Smaller profile size */
+      height: 60px;
+      border-radius: 50%;        /* Circle shape */
+      object-fit: cover;
+      border: 2px solid #ff758c;
+      box-shadow: 0 0 8px #ffb199;
+    }
+    
+    .logout-btn {
+      margin-top: 25px;
+      padding: 12px 25px;
+      background: linear-gradient(90deg, #ff5858, #f857a6);
+      border: none;
+      color: white;
+      border-radius: 25px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.3s ease;
+    }
+
+    .logout-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 10px #f857a6;
+    }
+
+    @media (max-width: 600px) {
+      .dashboard-container {
+        padding: 25px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <h1>Welcome, <span id="usernameDisplay">User</span> 👋</h1>
+
+    <div class="stats">
+      Total Score: <span id="score">0</span><br>
+      Quizzes Attended: <span id="quizzes">0</span>
+    </div>
+
+    <img src="data:image/png;base64,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" alt="Dashboard Image" class="dashboard-img" />
+
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </div>
+
+  
+  <script>
+    const storedUser = JSON.parse(localStorage.getItem('user')) || JSON.parse(sessionStorage.getItem('user'));
+  
+    if (!storedUser || !storedUser.username) {
+      alert("⚠️ Not logged in. Redirecting to login...");
+      window.location.href = "login.html";
+    } else {
+      document.getElementById('usernameDisplay').textContent = storedUser.username;
+      document.getElementById('score').textContent = storedUser.score ?? 0;
+      document.getElementById('quizzes').textContent = storedUser.quizzesAttended ?? 0;
+    }
+  
+    function logout() {
+      localStorage.removeItem('user');
+      sessionStorage.removeItem('user');
+      window.location.href = "login.html";
+    }
+  </script>
+  
+  
+</body>
+</html>
